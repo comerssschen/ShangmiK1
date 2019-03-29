@@ -58,13 +58,11 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.1.1'
     implementation 'org.greenrobot:greendao:3.2.2'
     implementation 'org.greenrobot:greendao-generator:3.2.2'
-    implementation(name: 'wxfacepay-release', ext: 'aar')
-    implementation 'com.squareup.okhttp:okhttp:2.4.0'
-    implementation files('libs/icod_3.1.1.jar')//桑达打印
+    implementation files('libs/icod_3.1.1.jar')
+    //桑达打印
     implementation 'com.blankj:utilcode:1.23.0'
     implementation 'com.jakewharton:butterknife:9.0.0-rc1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:9.0.0-rc1'
     implementation 'com.lzy.net:okgo:3.0.4'
     implementation 'cn.yipianfengye.android:zxing-library:2.2'
-
 }

@@ -5,8 +5,6 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
-import android.os.RemoteException;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
@@ -31,12 +29,8 @@ import android.widget.Toast;
 
 import com.blankj.utilcode.util.ObjectUtils;
 import com.flipboard.bottomsheet.BottomSheetLayout;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
 import com.sunmi.sunmit2demo.utils.AuthInfo;
 import com.sunmi.sunmit2demo.BaseActivity;
-import com.sunmi.sunmit2demo.utils.HttpUtils;
 import com.sunmi.sunmit2demo.R;
 import com.sunmi.sunmit2demo.utils.SucessEvent;
 import com.sunmi.sunmit2demo.adapter.GoodsAdapter;
@@ -51,24 +45,16 @@ import com.sunmi.sunmit2demo.utils.ScreenManager;
 import com.sunmi.sunmit2demo.utils.SharePreferenceUtil;
 import com.sunmi.sunmit2demo.view.CustomDialog;
 import com.sunmi.sunmit2demo.view.PhotoPopupWindow;
-import com.tencent.wxpayface.IWxPayfaceCallback;
-import com.tencent.wxpayface.WxPayFace;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-
-import static android.util.Log.d;
 
 public class MainActivity extends BaseActivity implements View.OnClickListener {
 
@@ -163,12 +149,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         initData();
         initAction();
         authInfo = new AuthInfo();
-        WxPayFace.getInstance().initWxpayface(this, new IWxPayfaceCallback() {
-            public void response(Map paramMap) throws RemoteException {
-                d(TAG, "response | initWxpayface " + paramMap);
-                getRawdata();
-            }
-        });
+
     }
 
 
@@ -529,7 +510,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
             @Override
             public void onPart1() {
-                wxPay();
+//                wxPay();//刷脸支付
                 mPhotoPopupWindow.dismiss();
             }
 
@@ -602,7 +583,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
     @Override
     protected void onDestroy() {
-        WxPayFace.getInstance().releaseWxpayface(this);
         super.onDestroy();
     }
 
@@ -621,148 +601,5 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         }
         return super.onKeyDown(keyCode, event);
     }
-
-    private void getRawdata() {
-        WxPayFace.getInstance().getWxpayfaceRawdata(new IWxPayfaceCallback() {
-            public void response(Map paramMap) throws RemoteException {
-                Log.i("test", "paramMap = " + paramMap);
-                String rawdata = paramMap.get("rawdata").toString();
-                String url = localhostUrl + "/api/Pay/FaceAuth";
-                Map<String, Object> map = new HashMap<>();
-                map.put("store_id", store_id);
-                map.put("store_name", store_name);
-                map.put("device_id", device_id);
-                map.put("appid", appid);
-                map.put("mch_id", mch_id);
-                map.put("sub_appid", sub_appid);
-                map.put("sub_mch_id", sub_mch_id);
-                map.put("rawdata", rawdata);
-                final JSONObject obj = new JSONObject(map);
-                Log.i("test", "obj = " + obj);
-                MediaType mediaType = MediaType.parse("application/json; charset=utf-8");
-                RequestBody body = RequestBody.create(mediaType, obj.toString());
-                Request request = new Request.Builder().url(url).post(body).build();
-                HttpUtils.postAsyn(MainActivity.this, request, new HttpUtils.CallBack() {
-
-                    @Override
-                    public void onFailure(Request request, IOException e) {
-                        Log.e("test", "失败=" + request);
-                        Toast.makeText(MainActivity.this, "网络连接失败", Toast.LENGTH_LONG).show();
-                    }
-
-                    @Override
-                    public void onResponse(String json) {
-//                                {"Version":"1.0","Code":200,"Msg":null,"IsError":false,"Result":"q3OPhFtQBf6KZGqmZhejKCRy5K/ch0kwS11YSsEj9XmUGqcsT2QPHt0Oa7xaCMCoS\r\nZTWMmShCo4dOiO5tU + OJEsvSxXzn5m3Nkh747tinNlbpJmVq1zOPj + FJNndkzanxoiAddO8p1Ef\r\nrmUhJs / aNf0pDfrPoVfkAapK + ZY6blwyaDQ9bB7 + KkZq29kObsXOZ3thg + bxP4RAqC0oxNS4Jiy\r\nP0uA1Euzxtkc9lCTebloFied8stILrMehUKukeMGkZ1SzTyc8 / HFHApzHahNPX6yD8ttzYnhe + I\r\nRMFJgpuTlIvEOYZUxenPXE1A5clrPvOBeJDszX / OvZl4fpYWPpXAcVQlw + gfYhblt + rT6ALMsD7\r\n3w / rT4NRriQEEraC4Pfb5yua4qAqv4TVo04"}
-                        Log.e("test", "json=" + json);
-                        try {
-                            JSONObject object = new JSONObject(json);
-                            String Code = object.optString("Code");
-                            if (Code.equals("200")) {
-                                String data = object.optString("Data");
-                                JSONObject jsonObject = new JSONObject(data);
-                                String authinfo = jsonObject.optString("authinfo");
-                                authInfo.setAuthinfo(authinfo);
-                                authInfo.setExpire_time(System.currentTimeMillis());
-                                Toast.makeText(MainActivity.this, "初始化成功", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(MainActivity.this, " Msg = " + object.optString("Msg"), Toast.LENGTH_LONG).show();
-                            }
-                        } catch (JSONException e) {
-                            Toast.makeText(MainActivity.this, "初始化失败", Toast.LENGTH_SHORT).show();
-                            e.printStackTrace();
-                        }
-
-
-                    }
-                });
-
-            }
-        });
-        //开启一个子线程，定时刷新
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Looper.prepare();
-                try {
-                    Thread.sleep(24 * 60 * 60 * 1000);
-//                    Thread.sleep(6 * 1000);
-                    getRawdata();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                Looper.loop();
-            }
-        }).start();
-    }
-
-    private void wxPay() {
-        result.clear();
-        result.addAll(menus);
-        outTratNum = "" + (System.currentTimeMillis());
-        localHashMap = new HashMap();
-        localHashMap.put("face_authtype", "FACEPAY");
-        localHashMap.put("appid", appid);
-        localHashMap.put("mch_id", mch_id);
-        localHashMap.put("store_id", store_id);
-        localHashMap.put("out_trade_no", outTratNum);
-        localHashMap.put("total_fee", "1");
-        localHashMap.put("ask_face_permit", "0");
-        localHashMap.put("sub_appid", sub_appid);
-        localHashMap.put("sub_mch_id", sub_mch_id);
-        if (TextUtils.isEmpty(authInfo.getAuthinfo())) {
-            Toast.makeText(MainActivity.this, "初始化失败，请退出重进", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        localHashMap.put("authinfo", authInfo.getAuthinfo());
-        localHashMap.put("payresult", "SUCCESS");
-        Log.i("test", "localHashMap" + localHashMap.toString());
-        WxPayFace.getInstance().getWxpayfaceCode(localHashMap, new IWxPayfaceCallback() {
-            public void response(final Map paramMap) throws RemoteException {
-                d(TAG, "response | getWxpayfaceCode " + paramMap);
-                final String code = paramMap.get("return_code").toString();
-                if (TextUtils.equals(code, "SUCCESS")) {
-                    String url = localhostUrl + "/api/Pay/FacePay?appid=wxb521f5422a6c458d&mch_id=1491129582&sub_appid=wxddd1a06745848ded&sub_mch_id=1505209351&out_trade_no=" + outTratNum + "&total_fee=" + PayMoney + "&openid=" + paramMap.get("openid").toString() + "&face_code=" + paramMap.get("face_code").toString();
-                    Log.i("test", "FacePay = " + url);
-                    Request request = new Request.Builder().url(url).get().build();
-                    HttpUtils.getAsyn(MainActivity.this, request, new HttpUtils.CallBack() {
-                        @Override
-                        public void onFailure(Request request, IOException e) {
-                            Toast.makeText(MainActivity.this, "请求失败", Toast.LENGTH_LONG).show();
-                        }
-
-                        @Override
-                        public void onResponse(String json) {
-                            Log.e("test", "json=" + json);
-                            try {
-                                JSONObject object = new JSONObject(json);
-                                String Code = object.optString("Code");
-                                if (Code.equals("200")) {
-                                    WxPayFace.getInstance().updateWxpayfacePayResult(localHashMap, new IWxPayfaceCallback() {
-                                        public void response(Map paramMap) throws RemoteException {
-                                            Intent intent = new Intent(MainActivity.this, SucessActivity.class);
-                                            intent.putExtra("menus", (Serializable) result);
-                                            intent.putExtra("count", totalCount);
-                                            startActivity(intent);
-                                        }
-                                    });
-                                } else {
-                                    Toast.makeText(MainActivity.this, " Msg = " + object.optString("Msg"), Toast.LENGTH_LONG).show();
-                                }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    });
-                } else if (TextUtils.equals(code, "USER_CANCEL")) {
-                    Toast.makeText(MainActivity.this, "用户取消", Toast.LENGTH_LONG).show();
-                } else if (TextUtils.equals(code, "SCAN_PAYMENT")) {
-                    Toast.makeText(MainActivity.this, "扫码支付", Toast.LENGTH_LONG).show();
-                }
-
-            }
-        });
-
-    }
-
 
 }
