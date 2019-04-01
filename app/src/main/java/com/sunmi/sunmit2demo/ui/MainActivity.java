@@ -87,22 +87,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     private ScreenManager screenManager = ScreenManager.getInstance();
     public static boolean isVertical = false;
     private CustomDialog customDialog;
-    private String localhostUrl = "http://tmpcloudpayapi.payweipan.com";
     public AuthInfo authInfo;
-    private String store_id = "1";
-    private String store_name = "name";
-    private String device_id = "1";
-    private String appid = "wxb521f5422a6c458d";
-    private String mch_id = "1491129582";
-    private String sub_appid = "wxddd1a06745848ded";
-    private String sub_mch_id = "1505209351";
-    private String outTratNum;
     private LinearLayout llK1ShoppingCar;
     private RelativeLayout rlCar;
     private boolean isRealDeal;
-    private List<MenusBean> result = new ArrayList<>();
     private int totalCount = 0;
-    private HashMap localHashMap;
     private EditText etScan;
 
     @Override
@@ -291,27 +280,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             addMenus(bean);
             buildMenuJson(menus);
         }
-//        for (GvBeans mOther : mOthers) {
-//            if (ObjectUtils.equals(mOther.getCode(), code)) {
-//                MenusBean bean = new MenusBean();
-//                bean.setId("" + (menus.size() + 1));
-//                bean.setMoney(mOther.getPrice());
-//                bean.setName(mOther.getName());
-//                bean.setCode(mOther.getCode());
-//                bean.setUnit(mOther.getUnit());
-//                bean.setUnitPrice(mOther.getPrice());
-//                bean.setCount(1);
-//                addMenus(bean);
-//                buildMenuJson(menus);
-//            }
-//        }
     }
 
     private void initAction() {
         othersAdapter.setOnItemClickListener(new GoodsAdapter.OnItemClickListener() {
-
             private int pos;
-
             @Override
             public void onItemClick(View view, int position) {
                 MenusBean bean = new MenusBean();
