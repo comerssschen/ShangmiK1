@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:paddingBottom="60dp"
-    android:layout_height="720dp">
+    android:layout_height="720dp"
+    android:paddingBottom="60dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingBottom="65.33dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingBottom="65.33dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -47,7 +47,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="53.33dp"
+            android:layout_height="60dp"
             android:background="#F1F5F6"
             android:orientation="horizontal">
 
@@ -57,32 +57,41 @@
                 android:layout_weight="1"
                 android:alpha="0.7"
                 android:gravity="center_vertical|start"
-                android:paddingStart="21.33dp"
-                android:text="@string/shop_car_code"
+                android:paddingStart="40dp"
+                android:text="商品名称"
                 android:textColor="#000000"
-                android:textSize="18.66sp" />
+                android:textSize="20sp" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
+                android:layout_weight="0.3"
                 android:alpha="0.7"
                 android:gravity="center_vertical|start"
-                android:paddingStart="21.33dp"
-                android:text="@string/shop_car_goods_name"
+                android:text="单价/单位"
                 android:textColor="#000000"
-                android:textSize="18.66sp" />
+                android:textSize="20sp" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
+                android:layout_weight="0.3"
                 android:alpha="0.7"
                 android:gravity="center_vertical|start"
-                android:paddingStart="21.33dp"
-                android:text="@string/shop_car_unit_money"
+                android:text="数量"
                 android:textColor="#000000"
-                android:textSize="18.66sp" />
+                android:textSize="20sp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginRight="40dp"
+                android:layout_weight="0.4"
+                android:alpha="0.7"
+                android:gravity="center_vertical|right"
+                android:text="金额"
+                android:textColor="#000000"
+                android:textSize="20sp" />
         </LinearLayout>
 
         <View

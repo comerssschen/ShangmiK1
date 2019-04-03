@@ -6,6 +6,7 @@ import android.os.Environment;
 import android.util.Log;
 
 
+import com.sunmi.payment.PaymentService;
 import com.sunmi.sunmit2demo.bean.DaoMaster;
 import com.sunmi.sunmit2demo.bean.DaoSession;
 
@@ -29,12 +30,15 @@ public class MyApplication extends Application {
         super.onCreate();
         app = this;
         this.initDB();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                initAssets();
-            }
-        }).start();
+        // 服务初始化
+        PaymentService.getInstance().init(this);
+
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                initAssets();
+//            }
+//        }).start();
     }
 
     public static MyApplication getInstance() {
@@ -75,7 +79,7 @@ public class MyApplication extends Application {
     }
 
     private void initDB() {
-        this.mDaoSession = (new DaoMaster((new DaoMaster.DevOpenHelper(this, "ble_bracelet")).getWritableDb())).newSession();
+        this.mDaoSession = (new DaoMaster((new DaoMaster.DevOpenHelper(this, "ble_bracelet.db")).getWritableDb())).newSession();
     }
 
     public DaoSession getDaoSession() {

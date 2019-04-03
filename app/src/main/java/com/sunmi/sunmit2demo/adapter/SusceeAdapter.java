@@ -48,11 +48,11 @@ public class SusceeAdapter extends BaseAdapter {
         ViewHold hold = null;
         if (convertView == null) {
             hold = new ViewHold();
-            if (mContext instanceof MainActivity) {
-                convertView = LayoutInflater.from(mContext).inflate(R.layout.menus_presentation_items_layout, null);
-            } else {
-                convertView = LayoutInflater.from(mContext).inflate(R.layout.menus_succes_items_layout, null);
-            }
+//            if (mContext instanceof MainActivity) {
+//                convertView = LayoutInflater.from(mContext).inflate(R.layout.menus_presentation_items_layout, null);
+//            } else {
+            convertView = LayoutInflater.from(mContext).inflate(R.layout.menus_succes_items_layout, null);
+//            }
             hold.tvName = convertView.findViewById(R.id.tvName);
             hold.tvMoney = convertView.findViewById(R.id.tvMoney);
             hold.tvcount = convertView.findViewById(R.id.tv_count);
@@ -67,9 +67,9 @@ public class SusceeAdapter extends BaseAdapter {
         hold.tvunit.setText(mMenus.get(position).getUnitPrice() + "/" + unit);
         hold.tvcount.setText("*" + mMenus.get(position).getCount());
         hold.tvMoney.setText(mMenus.get(position).getMoney());
-        if (mContext instanceof MainActivity) {
-            hold.tvunit.setVisibility(View.GONE);
-        }
+//        if (mContext instanceof MainActivity) {
+//            hold.tvunit.setVisibility(View.GONE);
+//        }
         return convertView;
     }
 

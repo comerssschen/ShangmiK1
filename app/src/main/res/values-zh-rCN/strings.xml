@@ -33,7 +33,6 @@
     <!--提示用语-->
     <string name="tips_cancel">取消</string>
     <string name="tips_yes">确定</string>
-    <string name="tips_exit">再按一次退出</string>
     <!--收银演示菜单-->
     <string name="menus_title">收银演示程序</string>
     <string name="menus_more">更多功能</string>
@@ -42,6 +41,7 @@
     <string name="shop_car_nothing">购物车中没有商品哟！</string>
     <string name="goods_nothing">暂无商品</string>
     <string name="shop_car_clear">清空</string>
+    <string name="shop_car_number">数量</string>
     <string name="shop_car_code">编号</string>
     <string name="shop_car_goods_name">品名</string>
     <string name="shop_car_unit_money">金额</string>
@@ -53,5 +53,18 @@
     <string name="more_goods_4">无需称重类商品</string>
     <string name="more_goods_5">饮料、零食</string>
     <string name="delete">删除</string>
+    <!--小票打印-->
+    <string name="print_proofs">打印样张</string>
+    <string name="print_order_number">订单编号：</string>
+    <string name="print_order_time">下单时间：</string>
+    <string name="print_payment_method">支付方式：</string>
+    <string name="print_thanks">感谢选择商米!</string>
+    <string name="print_total_payment">累计金额：</string>
+    <string name="print_real_payment">实际收款：</string>
+    <string name="print_rmb">元</string>
+
+    <!--paydialog-->
+    <string name="pay_face">人脸支付</string>
+
 
 </resources>

@@ -36,7 +36,6 @@
     <!--提示用语-->
     <string name="tips_cancel">Cancel</string>
     <string name="tips_yes">OK</string>
-    <string name="tips_exit">Press again to exit</string>
 
     <!--收银演示菜单-->
     <string name="menus_title">Cashier Demo</string>
@@ -47,6 +46,7 @@
     <string name="shop_car_nothing">There are no items in your cart!</string>
     <string name="goods_nothing">There are nothing items in your cart!</string>
     <string name="shop_car_clear">Empty</string>
+    <string name="shop_car_number">Number</string>
     <string name="shop_car_code">ID</string>
     <string name="shop_car_goods_name">Name</string>
     <string name="shop_car_unit_money">Amount</string>
@@ -59,4 +59,18 @@
     <string name="more_goods_5">Drinks and snacks</string>
     <!--电子秤-->
     <string name="delete">delete</string>
+
+    <!--小票打印-->
+    <string name="print_proofs">Print proofs</string>
+    <string name="print_order_number">Number:</string>
+    <string name="print_order_time">Time:</string>
+    <string name="print_payment_method">Payment:</string>
+    <string name="print_thanks">Thanks for choosing SUNMI!</string>
+    <string name="print_total_payment">Total：</string>
+    <string name="print_real_payment">Paid-in：</string>
+    <string name="print_rmb">$</string>
+
+    <!--paydialog-->
+    <string name="pay_face">Face pay</string>
+
 </resources>

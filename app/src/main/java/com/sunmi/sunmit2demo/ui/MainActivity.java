@@ -1,15 +1,17 @@
 package com.sunmi.sunmit2demo.ui;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Editable;
-import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -18,7 +20,6 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -28,21 +29,31 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.blankj.utilcode.util.ObjectUtils;
+import com.blankj.utilcode.util.ToastUtils;
 import com.flipboard.bottomsheet.BottomSheetLayout;
-import com.sunmi.sunmit2demo.utils.AuthInfo;
+import com.google.gson.Gson;
+import com.sunmi.extprinterservice.ExtPrinterService;
+import com.sunmi.payment.PaymentService;
 import com.sunmi.sunmit2demo.BaseActivity;
 import com.sunmi.sunmit2demo.R;
-import com.sunmi.sunmit2demo.utils.SucessEvent;
 import com.sunmi.sunmit2demo.adapter.GoodsAdapter;
 import com.sunmi.sunmit2demo.adapter.SusceeAdapter;
+import com.sunmi.sunmit2demo.bean.AlipaySmileModel;
+import com.sunmi.sunmit2demo.bean.Config;
 import com.sunmi.sunmit2demo.bean.GoodsCode;
 import com.sunmi.sunmit2demo.bean.GvBeans;
 import com.sunmi.sunmit2demo.bean.MenusBean;
+import com.sunmi.sunmit2demo.bean.Request;
 import com.sunmi.sunmit2demo.fragment.GoodsManagerFragment;
 import com.sunmi.sunmit2demo.fragment.PayModeSettingFragment;
+import com.sunmi.sunmit2demo.presenter.AlipaySmilePresenter;
+import com.sunmi.sunmit2demo.presenter.KPrinterPresenter;
+import com.sunmi.sunmit2demo.receiver.ResultReceiver;
+import com.sunmi.sunmit2demo.utils.AuthInfo;
 import com.sunmi.sunmit2demo.utils.ResourcesUtils;
 import com.sunmi.sunmit2demo.utils.ScreenManager;
 import com.sunmi.sunmit2demo.utils.SharePreferenceUtil;
+import com.sunmi.sunmit2demo.utils.SucessEvent;
 import com.sunmi.sunmit2demo.view.CustomDialog;
 import com.sunmi.sunmit2demo.view.PhotoPopupWindow;
 
@@ -52,7 +63,6 @@ import org.greenrobot.eventbus.Subscribe;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 
@@ -92,7 +102,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     private RelativeLayout rlCar;
     private boolean isRealDeal;
     private int totalCount = 0;
-    private EditText etScan;
+    private AlipaySmilePresenter alipaySmilePresenter;
+    private AlipaySmileModel alipaySmileModel;
+    public static KPrinterPresenter kPrinterPresenter;
+    private ExtPrinterService extPrinterService = null;//k1 打印服务
+    private ResultReceiver resultReceiver;
+
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -118,7 +133,21 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             bottomSheetLayout.dismissSheet();
             btnPay.setBackgroundColor(Color.parseColor("#999999"));
         }
+        kPrinterPresenter.print(event.getMsg());
     }
+
+    private ServiceConnection connService = new ServiceConnection() {
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            extPrinterService = null;
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            extPrinterService = ExtPrinterService.Stub.asInterface(service);
+            kPrinterPresenter = new KPrinterPresenter(MainActivity.this, extPrinterService);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,8 +168,15 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         initAction();
         authInfo = new AuthInfo();
 
-    }
+        alipaySmileModel = new AlipaySmileModel();
+        alipaySmilePresenter = new AlipaySmilePresenter(this, alipaySmileModel);
 
+        Intent intent = new Intent();
+        intent.setPackage("com.sunmi.extprinterservice");
+        intent.setAction("com.sunmi.extprinterservice.PrinterService");
+        bindService(intent, connService, Context.BIND_AUTO_CREATE);
+        registerResultReceiver();
+    }
 
     @Override
     protected void onStart() {
@@ -175,58 +211,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         snackAdapter.notifyDataSetChanged();
     }
 
-    private Handler handler = new Handler();
-
-    /**
-     * 延迟线程，看是否还有下一个字符输入
-     */
-    private Runnable delayRun = new Runnable() {
-
-        @Override
-        public void run() {
-            scanResult(etScan.getText().toString().replace(" ", "").replace("\n", ""));
-            etScan.setText("");
-        }
-    };
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (!ObjectUtils.isEmpty(etScan)) {
-            etScan.requestFocus();
-        }
-    }
-
     private void initView() {
-
-        etScan = findViewById(R.id.et_scan);
-//        etScan.setFocusable(true);
-//        etScan.setFocusableInTouchMode(true);
-        etScan.requestFocus();
-//        etScan.setShowSoftInputOnFocus(false);
-        etScan.addTextChangedListener(new TextWatcher() {
-
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (delayRun != null) {
-                    //每次editText有变化的时候，则移除上次发出的延迟线程
-                    handler.removeCallbacks(delayRun);
-                }
-                //延迟800ms，如果不再输入字符，则执行该线程的run方法
-                if (!TextUtils.isEmpty(etScan.getText())) {
-                    handler.postDelayed(delayRun, 100);
-                }
-            }
-        });
-
         TextView view = findViewById(R.id.app_name);
         view.setVisibility(isVertical ? View.INVISIBLE : View.VISIBLE);
         lvMenus = findViewById(R.id.lv_menus);
@@ -266,6 +251,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     }
 
     private void scanResult(String code) {
+        code = code.replace(" ", "").replace("\n", "");
         Log.i("test", "code = " + code);
         if (GoodsCode.getInstance().getGood().containsKey(code)) {
             GvBeans mOther = GoodsCode.getInstance().getGood().get(code);
@@ -282,9 +268,59 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         }
     }
 
+    private StringBuilder sb = new StringBuilder();
+    private Handler myHandler = new Handler();
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        int action = event.getAction();
+        switch (action) {
+            case KeyEvent.ACTION_DOWN:
+                int unicodeChar = event.getUnicodeChar();
+                if (unicodeChar != 0) {
+                    sb.append((char) unicodeChar);
+                }
+                if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP) {
+                    return super.dispatchKeyEvent(event);
+                }
+                if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
+                    return super.dispatchKeyEvent(event);
+                }
+                if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+                    return super.dispatchKeyEvent(event);
+                }
+                if (event.getKeyCode() == KeyEvent.KEYCODE_MENU) {
+                    return super.dispatchKeyEvent(event);
+                }
+                if (event.getKeyCode() == KeyEvent.KEYCODE_HOME) {
+                    return super.dispatchKeyEvent(event);
+                }
+                if (event.getKeyCode() == KeyEvent.KEYCODE_POWER) {
+                    return super.dispatchKeyEvent(event);
+                }
+                final int len = sb.length();
+                myHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (len != sb.length()) return;
+                        if (sb.length() > 0) {
+                            scanResult(sb.toString());
+                            sb.setLength(0);
+                        }
+                    }
+                }, 200);
+                return true;
+            default:
+                break;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+
     private void initAction() {
         othersAdapter.setOnItemClickListener(new GoodsAdapter.OnItemClickListener() {
             private int pos;
+
             @Override
             public void onItemClick(View view, int position) {
                 MenusBean bean = new MenusBean();
@@ -448,6 +484,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                 } else {
                     PayMoney = "0.01";
                 }
+
                 showPayPopWindow();
                 break;
             case R.id.main_k1_btn_pay:
@@ -458,6 +495,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                     PayMoney = "0.01";
                 }
                 showPayPopWindow();
+                bottomSheetLayout.dismissSheet();
                 break;
             case R.id.main_btn_car:
                 if (menus.size() > 0) {
@@ -483,7 +521,53 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
             @Override
             public void onPart1() {
-//                wxPay();//刷脸支付
+
+//                Intent intent = new Intent(MainActivity.this, SucessActivity.class);
+//                intent.putExtra("menus", (Serializable) menus);
+//                intent.putExtra("count", totalCount);
+//                startActivity(intent);
+
+                alipaySmilePresenter.setGoods(menus);
+                alipaySmilePresenter.init(PayMoney, "收银演示程序", "商米收银");
+                alipaySmilePresenter.startFaceService(AlicallBack);
+
+//                Request request = new Request();
+//                // 应用类型
+//                request.appType = "51";
+//                // 应用包名
+//                request.appId = getPackageName();
+//                // 交易类型
+//                request.transType = "00";
+//                // 交易金额
+//                Long amount = 0L;
+//                try {
+//                    amount = Long.parseLong("0.02");
+//                } catch (Exception e) {
+//                }
+//                request.amount = amount;
+//                // Saas软件订单号
+//                request.orderId = "123346546465";
+//                // 商品信息
+//                request.orderInfo = "商品信息";
+//                // 支付码
+//                request.payCode = "17682310719";
+//                Config config = new Config();
+//                // 交易过程中是否显示UI界面
+//                config.processDisplay = true;
+//                // 是否展示交易结果页
+//                config.resultDisplay = true;
+//                // 是否打印小票
+//                config.printTicket = true;
+//                // 指定签购单上的退款订单号类型
+//                config.printIdType = "指定签购单上的退款订单号类型";
+//                // 备注
+//                config.remarks = "备注";
+//                request.config = config;
+//
+//                Gson gson = new Gson();
+//                String jsonStr = gson.toJson(request);
+//                PaymentService.getInstance().callPayment(jsonStr);
+
                 mPhotoPopupWindow.dismiss();
             }
 
@@ -514,6 +598,45 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     }
 
 
+    //支付宝刷脸支付回调
+    AlipaySmilePresenter.AlipaySmileCallBack AlicallBack = new AlipaySmilePresenter.AlipaySmileCallBack() {
+        @Override
+        public void onStartFaceService() {
+            ToastUtils.showShort("onStartFaceService");
+        }
+
+        @Override
+        public void onFaceSuccess(String code, String msg) {
+            ToastUtils.showShort("刷脸" + code + "  " + msg);
+        }
+
+        @Override
+        public void onSuccess(String code, String msg) {
+            ToastUtils.showShort("支付成功" + code + "  " + msg);
+            Intent intent = new Intent(MainActivity.this, SucessActivity.class);
+            intent.putExtra("menus", (Serializable) menus);
+            intent.putExtra("count", totalCount);
+            startActivity(intent);
+        }
+
+        @Override
+        public void onGetMetaInfo(String metaInfo) {
+
+        }
+
+        @Override
+        public void onGetZimIdSuccess(String zimId) {
+            ToastUtils.showShort("获得id成功" + zimId);
+        }
+
+
+        @Override
+        public void onFail(final String code, final String msg) {
+            ToastUtils.showShort("失败" + code + "  " + msg);
+        }
+
+    };
+
     private View createBottomSheetView() {
         View bottomSheet = LayoutInflater.from(this).inflate(R.layout.sheet_layout, bottomSheetLayout, false);
         lvMenus = bottomSheet.findViewById(R.id.lv_menus);
@@ -537,8 +660,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         menusAdapter.update(menus);
         // 购物车有东西
         if (isVertical) {
-            tvCarMoeny.setText(ResourcesUtils.getString(R.string.units_money_units) + price);
-            tvCar.setText(menus.size() + "");
+            tvCarMoeny.setText(ResourcesUtils.getString(MainActivity.this, R.string.units_money_units) + decimalFormat.format(price));
+            tvCar.setText(totalCount + "");
             tvCar.setVisibility(View.VISIBLE);
             ivCar.setImageResource(R.drawable.car_white);
             btnPay.setBackgroundColor(Color.parseColor("#FC5436"));
@@ -557,6 +680,26 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (alipaySmilePresenter != null) {
+            alipaySmilePresenter.destory();
+        }
+        if (extPrinterService != null) {
+            unbindService(connService);
+        }
+        kPrinterPresenter = null;
+        if (resultReceiver != null) {
+            unregisterReceiver(resultReceiver);
+        }
+    }
+
+    private void registerResultReceiver() {
+        resultReceiver = new ResultReceiver(result -> {
+            ToastUtils.showShort(result);
+            Log.i("test", result);
+        });
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(ResultReceiver.RESPONSE_ACTION);
+        registerReceiver(resultReceiver, intentFilter);
     }
 
     //退出时的时间

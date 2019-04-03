@@ -307,7 +307,7 @@
 
     <FrameLayout
         android:id="@+id/fl_shopping_car"
-        android:layout_width="400dp"
+        android:layout_width="0dp"
         android:layout_height="match_parent">
 
         <LinearLayout
@@ -508,8 +508,4 @@
         </LinearLayout>
     </FrameLayout>
 
-    <EditText
-        android:id="@+id/et_scan"
-        android:layout_width="1dp"
-        android:layout_height="1dp" />
 </LinearLayout>
